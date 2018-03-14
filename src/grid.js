@@ -252,11 +252,11 @@ module.exports = class Grid {
             }
             else {
                 let passedValues = arguments; // Passing the arguments array to the passedValues variable
-              
+
                 let pivotingField = []; // Defining an Array to filter the Unique fields in the selected column to pivot
-                
+
                 let pivotingOtherField = []; //Defining an array to filter the Unique elements in the primary key column to pivot
-                
+
                 for (var i = 0; i < this.data.length; i++) {
                     pivotingField.push((this.data[i])[arguments[0]])
                 }
@@ -269,7 +269,7 @@ module.exports = class Grid {
                 let keys = Object.keys(this.data[0]); //Getting the keys of JSON object.
 
                 //Logic to find the Border Width
-                var bw1 = ((keys.length - (arguments.length - 1)) * 200) + (((arguments.length - 2)) * (list.length) * 200); // Logic for calculating the Border width.
+                var bw = ((keys.length - (arguments.length - 1)) * 200) + (((arguments.length - 2)) * (list.length) * 200); // Logic for calculating the Border width.
 
                 //logic for finding unique element in the Primary key Column
                 for (var i = 0; i < this.data.length; i++) {
@@ -279,7 +279,7 @@ module.exports = class Grid {
                 let list1 = pivotingOtherField.filter((x, i, pivotingOtherField) => pivotingOtherField.indexOf(x) == i); //Array Containing Unique Elements of the Primary key Provided
 
                 // Logic for calculating the Border Height.
-                var bh1 = (list1.length + 2) * 40;
+                var bh = (list1.length + 2) * 40;
 
                 var p = 10; //Margin 
 
@@ -289,18 +289,18 @@ module.exports = class Grid {
                     context.clearRect(10.5, 10, canvas.width, canvas.height)
 
                     //Drawing rows on the table...
-                    for (var x = 0; x <= bw1; x += 200) {
+                    for (var x = 0; x <= bw; x += 200) {
 
                         context.moveTo(0.5 + x + p, p);
-                        context.lineTo(0.5 + x + p, bh1 + p);
+                        context.lineTo(0.5 + x + p, bh + p);
 
                     }
 
                     //Drawing column on the table...
-                    for (var x = 0; x <= bh1; x += 40) {
+                    for (var x = 0; x <= bh; x += 40) {
 
                         context.moveTo(p, 0.5 + x + p);
-                        context.lineTo(bw1 + p, 0.5 + x + p);
+                        context.lineTo(bw + p, 0.5 + x + p);
 
                     }
                     context.strokeStyle = "black";
@@ -334,10 +334,10 @@ module.exports = class Grid {
                     }
 
                     //logic to remove the extra boxes...
-                    context.clearRect(10.5, bh1 + 10.5, canvas.width, canvas.height);
-                    context.clearRect(bw1 + 11, 9.5, canvas.width, canvas.height);
+                    context.clearRect(10.5, bh + 10.5, canvas.width, canvas.height);
+                    context.clearRect(bw + 11, 9.5, canvas.width, canvas.height);
 
-                    
+
                     //logic to create header...
                     //Removing column to pivot element from header
                     let headerKeys = keys; //Storing the Keys of the objects in headerKeys Variable
@@ -346,7 +346,7 @@ module.exports = class Grid {
                     for (var i1 = headerKeys.length - 1; i1--;) {
                         if (headerKeys[i1] === passedValues[0]) headerKeys.splice(i1, 1);
                     }
-                   
+
                     for (var i1 = 1; i1 < passedValues.length - 1; i1++) {
                         console.log(passedValues[i1]);
                         let index1 = headerKeys.indexOf(passedValues[i1]);
@@ -441,9 +441,9 @@ module.exports = class Grid {
 
                     //To print the data into the pivot table...
 
-                    for (let y = 120, max = 0, count = 0; y <= bh1; y += 40) {
+                    for (let y = 120, max = 0, count = 0; y <= bh; y += 40) {
 
-                        for (let x = 0, keyCount = 0; x < bw1; x += 200) {
+                        for (let x = 0, keyCount = 0; x < bw; x += 200) {
 
                             context.font = "normal 16px tahoma";
                             context.fillStyle = 'black';
@@ -453,9 +453,6 @@ module.exports = class Grid {
                                 ++keyCount;
                             }
                             else {
-                                // console.log("DataArray Element: ", DataArray[count][keys[keyCount]]);
-                                // console.log("Data Array length: ", DataArray[count][keys[keyCount]].length);
-                                // console.log("Max length: ", max)
 
                                 max = list.length;
                                 for (let pd = 0; pd < max; pd++) {
@@ -479,7 +476,7 @@ module.exports = class Grid {
                     }
 
                     //To Print the Header... 
-                    for (let x = 0, keyCount = 0; x <= bw1; x += 200) {
+                    for (let x = 0, keyCount = 0; x <= bw; x += 200) {
                         context.font = "bold 19px Verdana";
                         context.fillStyle = 'black';
                         if (keyCount < (headerKeys.length - (passedValues.length - 2))) {
@@ -492,7 +489,7 @@ module.exports = class Grid {
                             }
                             else {
                                 if (list.length == 1) {
-                                    // x = (Math.ceil(list.length/2))*200+(x-160.5);
+
                                     // console.log(Math.ceil(list.length / 2));
                                     context.fillText(headerKeys[keyCount], 0.5 + ((Math.ceil(list.length / 2)) * 200 + (x - 160.5)) + 15, 10 + 25);
                                     ++keyCount
@@ -500,7 +497,7 @@ module.exports = class Grid {
                                     // console.log(keyCount);
                                 }
                                 else {
-                                    // x = (Math.ceil(list.length/2))*200+x;
+
                                     // console.log(Math.ceil(list.length / 2));
                                     context.fillText(headerKeys[keyCount], 0.5 + ((Math.ceil(list.length / 2)) * 200 + (x - 160.5)) + 15, 10 + 25);
                                     ++keyCount
@@ -512,7 +509,7 @@ module.exports = class Grid {
                     }
 
                     //to print the second line of header...
-                    for (let x = 0, keyCount = 0; x <= bw1; x += 200) {
+                    for (let x = 0, keyCount = 0; x <= bw; x += 200) {
                         context.font = "bold 19px Verdana";
                         context.fillStyle = 'black';
                         if (keyCount < (headerKeys.length - (passedValues.length - 2))) {
@@ -539,7 +536,201 @@ module.exports = class Grid {
                 }
                 this.drawPivotBoard();
             }
+            return true;
         }
-    }
-}
 
+        //Logic to span the column or row
+        this.columnSpan = function (column, spanRange) {
+
+            if (this.flag == 0 && spanRange > 1 && column <= Object.keys(this.data[0]).length) {
+                //Function to draw table from JSON data...
+                this.drawBoard = function () {
+                    var span = spanRange;
+                    bw = (Object.keys(this.data[0]).length) * 200 + 200 * (span - 1); //Calculating Border Width
+
+                    let bh = (this.data.length + 1) * 40; // Calculating Border Height
+                    var p = 10; //margin
+                    console.log(canvas.width);
+                    console.log(canvas.height);
+                    //To clear the canvas before drawing or redrawing the Table
+                    context.clearRect(0, 0, canvas.width, canvas.height);
+                    //Drawing rows outline on the table...
+                    for (var x = 0; x <= bw; x += 200) {
+                        context.moveTo(0.5 + x + p, p);
+                        context.lineTo(0.5 + x + p, bh + p);
+                    }
+
+
+                    //Drawing column outline on the table...
+                    for (var x = 0; x <= bh; x += 40) {
+                        context.moveTo(p, 0.5 + x + p);
+                        context.lineTo(bw + p, 0.5 + x + p);
+                    }
+                    //Setting properties for the border lines in the table drawn
+                    context.strokeStyle = "black";
+                    context.stroke();
+
+
+                    //logic for columnSpan
+
+                    for (let y1 = 0; y1 < (span - 1); y1++) {
+                        var a, b, c, d;
+                        if (y1 == 0) {
+                            a = column * 200 + p + .5;
+                            b = 11;
+                            c = .5;
+                            d = bh - 1;
+                        }
+                        context.clearRect(a, b, c, d)
+                        a += 200;
+                    }
+
+
+                    let count; // Setting variable for counting the rows 
+
+                    let keys = Object.keys(this.data[0]); // finding keys in each JSON object
+
+                    // console.log("Total keys in each JSON object: ",keys);
+
+                    //To print the values of the Table Excluding Header...
+                    for (let y = 80, count = 0; y <= bh; y += 40) {
+
+                        for (let x = 0, keyCount = 0; x < bw; x += 200) {
+                            context.font = "normal 16px Verdana";
+                            context.fillStyle = 'black';
+                            if (keyCount == (column - 1)) {
+                                context.fillText((this.data[count])[keys[keyCount]], 0.5 + x + p + 5, y);
+                                ++keyCount;
+                                x += ((spanRange) * 200)
+                            }
+                            context.fillText((this.data[count])[keys[keyCount]], 0.5 + x + p + 5, y);
+                            ++keyCount;
+                        }
+                        ++count;
+                    }
+
+                    //To Print the Header... 
+                    for (let x = 0, keyCount = 0; x < bw; x += 200) {
+                        context.font = "bold 16px Verdana";
+                        context.fillStyle = 'black';
+                        if (keyCount == (column - 1)) {
+                            context.fillText(keys[keyCount], 0.5 + x + p + 5, p + 25);
+                            ++keyCount;
+                            x += ((spanRange - 1) * 200)
+                        }
+                        else {
+                            context.fillText(keys[keyCount], 0.5 + x + p + 5, p + 25);
+                            ++keyCount;
+                        }
+                    }
+
+                    console.log("bh bw:", bh, bw)
+                    //To clear extra rows and table in the column in canvas when table restructures.
+                    context.clearRect(10, bh + 11, canvas.width, canvas.height)
+                    context.clearRect(bw + 11, 9.5, canvas.width, canvas.height)
+
+                }
+                this.drawBoard(); //Function call to draw the canvas on screen.
+
+            }
+        }
+
+        this.rowsSpan = function (row, spanRange) {
+            if (this.flag == 0 && spanRange > 1 && row <= this.data.length) {
+                //Function to draw table from JSON data...
+                this.drawBoard = function () {
+                    var span = spanRange;
+                    bh = (this.data.length + 1) * 40 + 40 * (span - 1); // Calculating Border Height
+                    bw = (Object.keys(this.data[0]).length) * 200; //Calculating Border Width
+                    var p = 10; //margin
+                    console.log(canvas.width);
+                    console.log(canvas.height);
+                    //To clear the canvas before drawing or redrawing the Table
+                    context.clearRect(0, 0, canvas.width, canvas.height);
+                    //Drawing rows outline on the table...
+                    for (var x = 0; x <= bw; x += 200) {
+                        context.moveTo(0.5 + x + p, p);
+                        context.lineTo(0.5 + x + p, bh + p);
+                    }
+
+                    //Drawing column outline on the table...
+                    for (var x = 0; x <= bh; x += 40) {
+                        context.moveTo(p, 0.5 + x + p);
+                        context.lineTo(bw + p, 0.5 + x + p);
+                    }
+                    //Setting properties for the border lines in the table drawn
+                    context.strokeStyle = "black";
+                    context.stroke();
+
+
+                    //logic for columnSpan
+
+                    for (let y1 = 0; y1 < (span - 1); y1++) {
+                        var a, b, c, d;
+                        for (let y2 = 0; y2 <= bw; y2 += 200) {
+
+                            if (y1 == 0) {
+                                a = 11;
+                                b = (row + 1) * 40 + p;
+                                c = y2 - 1;
+                                d = .5;
+                            }
+                            context.clearRect(a, b, c, d)
+
+                        }
+                        b += 40;
+                    }
+
+
+                    let count; // Setting variable for counting the rows 
+
+                    let keys = Object.keys(this.data[0]); // finding keys in each JSON object
+
+                    // console.log("Total keys in each JSON object: ",keys);
+
+                    //To print the values of the Table Excluding Header...
+                    for (let y = 80, count = 0; y <= bh; y += 40) {
+
+                        for (let x = 0, keyCount = 0; x < bw; x += 200) {
+                            context.font = "normal 16px Verdana";
+                            context.fillStyle = 'black';
+                            if (count == (row - 1)) {
+                                context.fillText((this.data[count])[keys[keyCount]], 0.5 + x + p + 5, y + 40 * ((spanRange - 1) / 2));
+                            }
+                            else {
+                                context.fillText((this.data[count])[keys[keyCount]], 0.5 + x + p + 5, y);
+                            }
+                            ++keyCount;
+                        }
+
+                        if (count == (row - 1)) {
+                            y += ((spanRange - 1) * 40)
+                        }
+
+                        ++count;
+                    }
+
+                    //To Print the Header... 
+                    for (let x = 0, keyCount = 0; x < bw; x += 200) {
+                        context.font = "bold 16px Verdana";
+                        context.fillStyle = 'black';
+                        context.fillText(keys[keyCount], 0.5 + x + p + 5, p + 25);
+                        ++keyCount;
+
+                    }
+
+                    console.log("bh bw:", bh, bw)
+                    //To clear extra rows and table in the column in canvas when table restructures.
+                    context.clearRect(10, bh + 11, canvas.width, canvas.height)
+                    context.clearRect(bw + 11, 9.5, canvas.width, canvas.height)
+
+                }
+                this.drawBoard(); //Function call to draw the canvas on screen.
+
+            }
+        }
+
+        return true;
+    }
+
+};
