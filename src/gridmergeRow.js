@@ -8,12 +8,8 @@ module.exports = class Grid {
         //Flag to deny the access to changeHeader or ChangeData if Table is Pivoted
         this.flag = 0;
 
-        //Defining an array to save the state of Row
+        //Defining an array to save the state
         let previousStateArray = [];
-        
-        //Defining an array to save the state of Column
-        let previousColumnStateArray = [];
-
         // let csvData = `CITY,ZONE,PRODUCT,WEBVISIT,DOWNLOAD
         // BLR,KOR,FC,92,96,
         // BLR,KOR,FB,98,97,
@@ -181,8 +177,6 @@ module.exports = class Grid {
         }
         this.drawBoard(); //Function call to draw the canvas on screen.
 
-        context.save();
-
         //To change the Property of Header
         this.changeHeader = function (font = "normal", pixel = "16px", family = "tahoma", color = "black", align = "left") {
 
@@ -260,6 +254,7 @@ module.exports = class Grid {
                 return "Table has been Pivoted!"
             }
         }
+
 
         //Logic to pivot the table or Flat the values of the table...
         this.pivotTable = function () {
@@ -869,55 +864,35 @@ module.exports = class Grid {
         }
 
         //Logic to merge the column
-        this.mergeColumn = function (Row, startColumn, endColumn) {
+        this.mergeColumn = function (row, startColumn, endColumn) {
 
-            //to get the previous states...
-            let stateArray = JSON.parse(sessionStorage.getItem("previousColumnState"));
-            console.log("Previous Column State array: ", stateArray);
-
-            let stateFlag = 0;
-
-            if (stateArray != null) {
-                for (let stateIndex = 0; stateIndex < stateArray.length; stateIndex++) {
-
-                    if (stateArray[stateIndex]["row"] == Row) {
-
-                        if (startColumn >= stateArray[stateIndex]["startColumn"] && startColumn <= stateArray[stateIndex]["endColumn"]) {
-                            stateFlag = 2;
-                            alert("Invalid argument passed!")
-                            break;
-                        }
-                        else {
-                            if (endColumn >= stateArray[stateIndex]["startColumn"] && endColumn <= stateArray[stateIndex]["endColumn"]) {
-                                stateFlag = 2;
-                                alert("Invalid argument passed!")
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                if (stateFlag == 0) {
-                    stateFlag = 1;
-                }
-            }
-            else {
-                stateFlag = 1;
-            }
-
-
-            if (this.flag == 0 && stateFlag == 1 && Row <= this.data.length + 1 && endColumn > startColumn && startColumn != endColumn) {
-
-                //Function to restore the Canavas... 
-                context.restore();
-
+            if (this.flag == 0 && row <= this.data.length + 1 && endColumn > startColumn && startColumn != endColumn) {
                 //Function to draw table from JSON data...
                 this.drawBoard = function () {
 
                     console.log("Canvas Width: ", canvas.width);
                     console.log("Canvas Height: ", canvas.height);
 
-                    //logic for columnSpan
+                    //To clear the canvas before drawing or redrawing the Table
+                    context.clearRect(0, 0, canvas.width, canvas.height);
+
+                    //Drawing rows outline on the table...
+                    for (var x = 0; x <= bw; x += 200) {
+                        context.moveTo(0.5 + x + p, p);
+                        context.lineTo(0.5 + x + p, bh + p);
+                    }
+
+                    //Drawing column outline on the table...
+                    for (var x = 0; x <= bh; x += 40) {
+                        context.moveTo(p, 0.5 + x + p);
+                        context.lineTo(bw + p, 0.5 + x + p);
+                    }
+
+                    //Setting properties for the border lines in the table drawn
+                    context.strokeStyle = "black";
+                    context.stroke();
+
+                    //logic for rowSpan
                     for (let y2 = 0, count = 0; y2 <= bw; y2 += 200) {
                         var a, b, c, d;
 
@@ -927,7 +902,7 @@ module.exports = class Grid {
                         }
                         if (y2 == 0) {
                             a = (startColumn) * 200 + p;
-                            b = (Row - 1) * 40 + 11;
+                            b = (row - 1) * 40 + 11;
                             c = 2;
                             d = 39;
                         }
@@ -940,53 +915,60 @@ module.exports = class Grid {
 
                     let keys = Object.keys(this.data[0]); // finding keys in each JSON object
 
+                    // console.log("Total keys in each JSON object: ",keys);
+
                     //To Print the Header... 
-                    for (let x = 0, Count = 1; x < bw; x += 200) {
+                    for (let x = 0, keyCount = 0; x < bw; x += 200) {
                         context.font = "bold 16px Verdana";
                         context.fillStyle = 'black';
-                        if (Row == 1) {
-                            if (Count >= startColumn && Count < endColumn) {
-                                context.clearRect((startColumn - 1) * 200 + 11, (Row - 1) * 40 + 11, 199 + (endColumn - startColumn) * 199, 39);
+                        if (row == 1) {
+                            if (keyCount + 1 >= startColumn && keyCount < endColumn) {
+                                context.clearRect((row - 1) * 40 + 11, (startColumn) * 200 + 11, (endColumn) * 199, 39);
                                 context.fillText(keys[startColumn - 1], (startColumn * 200 + (Math.floor((endColumn - startColumn) / 2)) * 200) - 100, 40 - 5);
                             }
+                            else {
+                                context.fillText(keys[keyCount], 0.5 + x + p + 5, p + 25);
+                            }
                         }
-                        ++Count;
+                        else {
+                            context.fillText(keys[keyCount], 0.5 + x + p + 5, p + 25);
+                        }
+                        ++keyCount;
+
                     }
+
 
                     //To print the values of the Table Excluding Header...
                     for (let y = 80, count = 0; y <= bh; y += 40) {
+
                         for (let x = 0, keyCount = 0; x < bw; x += 200) {
                             context.font = "normal 16px Verdana";
                             context.fillStyle = 'black';
-                            if (count + 2 == Row) {
+                            if (count + 2 == row) {
                                 if (keyCount + 1 >= startColumn && keyCount < endColumn) {
-                                    context.clearRect((startColumn - 1) * 200 + 11, (Row - 1) * 40 + 11, 199 + (endColumn - startColumn) * 199, 39);
-                                    context.fillText(this.data[Row - 2][keys[startColumn - 1]], (startColumn * 200 + (Math.floor((endColumn - startColumn) / 2)) * 200) - 100, y - 5);
+                                    context.clearRect((row - 1) * 40 + 11, (startColumn) * 200 + 11, (endColumn) * 199, 39);
+                                    context.fillText(this.data[row - 2][keys[startColumn - 1]], (startColumn * 200 + (Math.floor((endColumn - startColumn) / 2)) * 200) - 100, y - 5);
                                 }
+                                else {
+                                    context.fillText((this.data[count])[keys[keyCount]], 0.5 + x + p + 5, y);
+                                }
+                            }
+                            else {
+                                context.fillText((this.data[count])[keys[keyCount]], 0.5 + x + p + 5, y);
                             }
                             ++keyCount;
                         }
                         ++count;
                     }
 
+
+
                     console.log("bh bw:", bh, bw)
                     //To clear extra rows and table in the column in canvas when table restructures.
                     context.clearRect(10, bh + 11, canvas.width, canvas.height)
                     context.clearRect(bw + 11, 9.5, canvas.width, canvas.height)
 
-                    //To Save the context
                     context.save();
-
-                    let state = {
-                        "row": Row,
-                        "startColumn": startColumn,
-                        "endColumn": endColumn
-                    }
-
-                    previousColumnStateArray.push(state);
-
-                    sessionStorage.setItem("previousColumnState", JSON.stringify(previousColumnStateArray));
-
 
                 }
                 this.drawBoard(); //Function call to draw the canvas on screen.
@@ -997,4 +979,5 @@ module.exports = class Grid {
 
         return true;
     }
+
 };
