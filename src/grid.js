@@ -8,6 +8,8 @@ module.exports = class Grid {
         //Flag to deny the access to changeHeader or ChangeData if Table is Pivoted
         this.flag = 0;
 
+        //Defining an array to save the state
+        let previousStateArray = [];
         // let csvData = `CITY,ZONE,PRODUCT,WEBVISIT,DOWNLOAD
         // BLR,KOR,FC,92,96,
         // BLR,KOR,FB,98,97,
@@ -99,6 +101,9 @@ module.exports = class Grid {
         // Obtaining a 2D context from the canvas element.
         var context = canvas.getContext("2d");
 
+        //to control the transparency of the table
+        context.globalAlpha = 0.8;
+
         //Logic to create a table
         let bw = (Object.keys(this.data[0]).length) * 200; //Calculating Border Width
         let bh = (this.data.length + 1) * 40; // Calculating Border Height
@@ -125,9 +130,19 @@ module.exports = class Grid {
                 context.lineTo(bw + p, 0.5 + x + p);
             }
 
-            //Setting properties for the border lines in the table drawn
-            context.strokeStyle = "black";
+            var linearGradient2 = context.createLinearGradient(125, 0, 225, 0);
+            linearGradient2.addColorStop(0, 'rgb(255, 0,   0)');
+            linearGradient2.addColorStop(0.5, 'rgb(  0, 0, 255)');
+            linearGradient2.addColorStop(1, 'rgb(  0, 0,   0)');
+
+            context.lineJoin = "round";
+
+            context.strokeStyle = linearGradient2;
             context.stroke();
+
+            // //Setting properties for the border lines in the table drawn
+            // context.strokeStyle = "black";
+            // context.stroke();
 
             let count; // Setting variable for counting the rows 
 
@@ -635,6 +650,7 @@ module.exports = class Grid {
             }
         }
 
+        //Logic to span the Column or row
         this.rowsSpan = function (row, spanRange) {
             if (this.flag == 0 && spanRange > 1 && row <= this.data.length) {
                 //Function to draw table from JSON data...
@@ -728,6 +744,237 @@ module.exports = class Grid {
                 this.drawBoard(); //Function call to draw the canvas on screen.
 
             }
+        }
+
+        //Logic to Merge Row
+        this.mergeRow = function (column, startRow, endRow) {
+
+            //to get the previous states...
+            let stateArray = JSON.parse(sessionStorage.getItem("previousState"));
+            console.log("Previous State array: ", stateArray);
+
+            let stateFlag = 0;
+
+            if (stateArray != null) {
+                for (let stateIndex = 0; stateIndex < stateArray.length; stateIndex++) {
+
+                    if (stateArray[stateIndex]["column"] == column) {
+
+                        if (startRow >= stateArray[stateIndex]["startRow"] && startRow <= stateArray[stateIndex]["endRow"]) {
+                            stateFlag = 2;
+                            alert("Invalid argument passed!")
+                            break;
+                        }
+                        else {
+                            if (endRow >= stateArray[stateIndex]["startRow"] && endRow <= stateArray[stateIndex]["endRow"]) {
+                                stateFlag = 2;
+                                alert("Invalid argument passed!")
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (stateFlag == 0) {
+                    stateFlag = 1;
+                }
+            }
+            else {
+                stateFlag = 1;
+            }
+
+            if (this.flag == 0 && stateFlag == 1 && column <= this.data.length && endRow > startRow && startRow != endRow) {
+
+                //Function to restore the Canavas... 
+                context.restore();
+
+                //Function to draw table from JSON data...
+                this.drawBoard = function () {
+
+                    console.log("Canvas Width: ", canvas.width);
+                    console.log("Canvas Height: ", canvas.height);
+
+                    //logic for rowSpan
+
+                    for (let y2 = 0, count = 0; y2 <= bh; y2 += 40) {
+                        var a, b, c, d;
+
+                        if (count == (endRow - startRow)) {
+                            break;
+                        }
+                        if (y2 == 0) {
+                            a = (column - 1) * 200 + 11;
+                            b = (startRow + 1) * 40 + p;
+                            c = 199;
+                            d = 1;
+                        }
+                        context.clearRect(a, b, c, d)
+                        b += 40;
+                        ++count;
+                    }
+
+                    let count; // Setting variable for counting the rows 
+
+                    let keys = Object.keys(this.data[0]); // finding keys in each JSON object
+
+                    // console.log("Total keys in each JSON object: ",keys);
+
+                    // //To print the values of the Table Excluding Header...
+                    for (let y = 80, count = 0; y <= bh; y += 40) {
+
+                        for (let x = 0, keyCount = 0; x < bw; x += 200) {
+                            context.font = "normal 16px Verdana";
+                            context.fillStyle = 'black';
+                            if ((keyCount + 1) == column && count < endRow && count + 1 > startRow) {
+
+                                context.clearRect((column - 1) * 200 + 11, (startRow) * 40 + 11, 199, (39 + (endRow - startRow) * 40));
+                                context.fillText((this.data[startRow - 1])[keys[keyCount]], 0.5 + x + p + 5, (startRow + 1) * 40 + 40 * ((endRow - startRow) / 2));
+
+                            }
+                            // else {
+                            //     context.fillText((this.data[count])[keys[keyCount]], 0.5 + x + p + 5, y);
+                            // }
+                            ++keyCount;
+                        }
+                        ++count;
+                    }
+
+                    console.log("bh bw:", bh, bw)
+                    //To clear extra rows and table in the column in canvas when table restructures.
+                    context.clearRect(10, bh + 11, canvas.width, canvas.height)
+                    context.clearRect(bw + 11, 9.5, canvas.width, canvas.height)
+
+                    context.save();
+
+                    let state = {
+                        "column": column,
+                        "startRow": startRow,
+                        "endRow": endRow
+                    }
+
+                    previousStateArray.push(state);
+
+                    sessionStorage.setItem("previousState", JSON.stringify(previousStateArray));
+
+                }
+                this.drawBoard(); //Function call to draw the canvas on screen.
+
+            }
+
+        }
+
+        //Logic to merge the column
+        this.mergeColumn = function (row, startColumn, endColumn) {
+
+            if (this.flag == 0 && row <= this.data.length + 1 && endColumn > startColumn && startColumn != endColumn) {
+                //Function to draw table from JSON data...
+                this.drawBoard = function () {
+
+                    console.log("Canvas Width: ", canvas.width);
+                    console.log("Canvas Height: ", canvas.height);
+
+                    //To clear the canvas before drawing or redrawing the Table
+                    context.clearRect(0, 0, canvas.width, canvas.height);
+
+                    //Drawing rows outline on the table...
+                    for (var x = 0; x <= bw; x += 200) {
+                        context.moveTo(0.5 + x + p, p);
+                        context.lineTo(0.5 + x + p, bh + p);
+                    }
+
+                    //Drawing column outline on the table...
+                    for (var x = 0; x <= bh; x += 40) {
+                        context.moveTo(p, 0.5 + x + p);
+                        context.lineTo(bw + p, 0.5 + x + p);
+                    }
+
+                    //Setting properties for the border lines in the table drawn
+                    context.strokeStyle = "black";
+                    context.stroke();
+
+                    //logic for rowSpan
+                    for (let y2 = 0, count = 0; y2 <= bw; y2 += 200) {
+                        var a, b, c, d;
+
+                        if (count == (endColumn - startColumn)) {
+
+                            break;
+                        }
+                        if (y2 == 0) {
+                            a = (startColumn) * 200 + p;
+                            b = (row - 1) * 40 + 11;
+                            c = 2;
+                            d = 39;
+                        }
+                        context.clearRect(a, b, c, d)
+                        a += 200;
+                        ++count;
+                    }
+
+                    let count; // Setting variable for counting the rows 
+
+                    let keys = Object.keys(this.data[0]); // finding keys in each JSON object
+
+                    // console.log("Total keys in each JSON object: ",keys);
+
+                    //To Print the Header... 
+                    for (let x = 0, keyCount = 0; x < bw; x += 200) {
+                        context.font = "bold 16px Verdana";
+                        context.fillStyle = 'black';
+                        if (row == 1) {
+                            if (keyCount + 1 >= startColumn && keyCount < endColumn) {
+                                context.clearRect((row - 1) * 40 + 11, (startColumn) * 200 + 11, (endColumn) * 199, 39);
+                                context.fillText(keys[startColumn - 1], (startColumn * 200 + (Math.floor((endColumn - startColumn) / 2)) * 200) - 100, 40 - 5);
+                            }
+                            else {
+                                context.fillText(keys[keyCount], 0.5 + x + p + 5, p + 25);
+                            }
+                        }
+                        else {
+                            context.fillText(keys[keyCount], 0.5 + x + p + 5, p + 25);
+                        }
+                        ++keyCount;
+
+                    }
+
+
+                    //To print the values of the Table Excluding Header...
+                    for (let y = 80, count = 0; y <= bh; y += 40) {
+
+                        for (let x = 0, keyCount = 0; x < bw; x += 200) {
+                            context.font = "normal 16px Verdana";
+                            context.fillStyle = 'black';
+                            if (count + 2 == row) {
+                                if (keyCount + 1 >= startColumn && keyCount < endColumn) {
+                                    context.clearRect((row - 1) * 40 + 11, (startColumn) * 200 + 11, (endColumn) * 199, 39);
+                                    context.fillText(this.data[row - 2][keys[startColumn - 1]], (startColumn * 200 + (Math.floor((endColumn - startColumn) / 2)) * 200) - 100, y - 5);
+                                }
+                                else {
+                                    context.fillText((this.data[count])[keys[keyCount]], 0.5 + x + p + 5, y);
+                                }
+                            }
+                            else {
+                                context.fillText((this.data[count])[keys[keyCount]], 0.5 + x + p + 5, y);
+                            }
+                            ++keyCount;
+                        }
+                        ++count;
+                    }
+
+
+
+                    console.log("bh bw:", bh, bw)
+                    //To clear extra rows and table in the column in canvas when table restructures.
+                    context.clearRect(10, bh + 11, canvas.width, canvas.height)
+                    context.clearRect(bw + 11, 9.5, canvas.width, canvas.height)
+
+                    context.save();
+
+                }
+                this.drawBoard(); //Function call to draw the canvas on screen.
+
+            }
+
         }
 
         return true;
