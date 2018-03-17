@@ -10,7 +10,7 @@ module.exports = class Grid {
 
         //Defining an array to save the state of Row
         let previousStateArray = [];
-        
+
         //Defining an array to save the state of Column
         let previousColumnStateArray = [];
 
@@ -758,6 +758,22 @@ module.exports = class Grid {
             let stateArray = JSON.parse(sessionStorage.getItem("previousState"));
             console.log("Previous State array: ", stateArray);
 
+            //to get the previous column state...
+            let columnStateArray = JSON.parse(sessionStorage.getItem("previousColumnState"));
+            console.log("Previous Column State array: ", columnStateArray);
+
+            if (columnStateArray != null) {
+                for (let columnStateIndex = 0; columnStateIndex < columnStateArray.length; columnStateIndex++) {
+                    for (let i1 = startRow; i1 < endRow; i1++) {
+                        if ((columnStateArray[columnStateIndex]["row"] - 1) == i1) {
+                            if (column >= columnStateArray[columnStateIndex]["startColumn"] && column <= columnStateArray[columnStateIndex]["endColumn"]) {
+                                return alert("Invalid arguments passed!");
+                            }
+                        }
+                    }
+                }
+            }
+
             let stateFlag = 0;
 
             if (stateArray != null) {
@@ -788,7 +804,7 @@ module.exports = class Grid {
                 stateFlag = 1;
             }
 
-            if (this.flag == 0 && stateFlag == 1 && column <= this.data.length && endRow > startRow && startRow != endRow) {
+            if (this.flag == 0 && stateFlag == 1 && column <= this.data.length && endRow > startRow && startRow != endRow && endRow <= (this.data.length + 1)) {
 
                 //Function to restore the Canavas... 
                 context.restore();
@@ -875,13 +891,25 @@ module.exports = class Grid {
             let stateArray = JSON.parse(sessionStorage.getItem("previousColumnState"));
             console.log("Previous Column State array: ", stateArray);
 
+            //to get the previous row State...
+            let rowStateArray = JSON.parse(sessionStorage.getItem("previousState"));
+            console.log("Previous Row State array: ", rowStateArray);
+
+            if (rowStateArray != null) {
+                for (let rowStateIndex = 0; rowStateIndex < rowStateArray.length; rowStateIndex++) {
+                    if (rowStateArray[rowStateIndex]["column"] == startColumn) {
+                        if ((Row - 1) == rowStateArray[rowStateIndex]["startRow"] || (Row - 1) == rowStateArray[rowStateIndex]["endRow"]) {
+                            return alert("Invalid Argument Passed!");
+                        }
+                    }
+                }
+            }
+
             let stateFlag = 0;
 
             if (stateArray != null) {
                 for (let stateIndex = 0; stateIndex < stateArray.length; stateIndex++) {
-
                     if (stateArray[stateIndex]["row"] == Row) {
-
                         if (startColumn >= stateArray[stateIndex]["startColumn"] && startColumn <= stateArray[stateIndex]["endColumn"]) {
                             stateFlag = 2;
                             alert("Invalid argument passed!")
@@ -906,7 +934,7 @@ module.exports = class Grid {
             }
 
 
-            if (this.flag == 0 && stateFlag == 1 && Row <= this.data.length + 1 && endColumn > startColumn && startColumn != endColumn) {
+            if (this.flag == 0 && stateFlag == 1 && Row <= this.data.length + 1 && endColumn > startColumn && startColumn != endColumn && (endColumn <= Object.keys(this.data[0]).length + 1)) {
 
                 //Function to restore the Canavas... 
                 context.restore();
@@ -986,15 +1014,10 @@ module.exports = class Grid {
                     previousColumnStateArray.push(state);
 
                     sessionStorage.setItem("previousColumnState", JSON.stringify(previousColumnStateArray));
-
-
                 }
                 this.drawBoard(); //Function call to draw the canvas on screen.
-
             }
-
         }
-
         return true;
     }
 };

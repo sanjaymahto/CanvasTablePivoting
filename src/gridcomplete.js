@@ -8,8 +8,12 @@ module.exports = class Grid {
         //Flag to deny the access to changeHeader or ChangeData if Table is Pivoted
         this.flag = 0;
 
-        //Defining an array to save the state
+        //Defining an array to save the state of Row
         let previousStateArray = [];
+
+        //Defining an array to save the state of Column
+        let previousColumnStateArray = [];
+
         // let csvData = `CITY,ZONE,PRODUCT,WEBVISIT,DOWNLOAD
         // BLR,KOR,FC,92,96,
         // BLR,KOR,FB,98,97,
@@ -177,6 +181,8 @@ module.exports = class Grid {
         }
         this.drawBoard(); //Function call to draw the canvas on screen.
 
+        context.save();
+
         //To change the Property of Header
         this.changeHeader = function (font = "normal", pixel = "16px", family = "tahoma", color = "black", align = "left") {
 
@@ -254,7 +260,6 @@ module.exports = class Grid {
                 return "Table has been Pivoted!"
             }
         }
-
 
         //Logic to pivot the table or Flat the values of the table...
         this.pivotTable = function () {
@@ -753,6 +758,22 @@ module.exports = class Grid {
             let stateArray = JSON.parse(sessionStorage.getItem("previousState"));
             console.log("Previous State array: ", stateArray);
 
+            //to get the previous column state...
+            let columnStateArray = JSON.parse(sessionStorage.getItem("previousColumnState"));
+            console.log("Previous Column State array: ", columnStateArray);
+
+            if (columnStateArray != null) {
+                for (let columnStateIndex = 0; columnStateIndex < columnStateArray.length; columnStateIndex++) {
+                    for (let i1 = startRow; i1 < endRow; i1++) {
+                        if ((columnStateArray[columnStateIndex]["row"] - 1) == i1) {
+                            if (column >= columnStateArray[columnStateIndex]["startColumn"] && column <= columnStateArray[columnStateIndex]["endColumn"]) {
+                                return alert("Invalid arguments passed!");
+                            }
+                        }
+                    }
+                }
+            }
+
             let stateFlag = 0;
 
             if (stateArray != null) {
@@ -783,7 +804,7 @@ module.exports = class Grid {
                 stateFlag = 1;
             }
 
-            if (this.flag == 0 && stateFlag == 1 && column <= this.data.length && endRow > startRow && startRow != endRow) {
+            if (this.flag == 0 && stateFlag == 1 && column <= this.data.length && endRow > startRow && startRow != endRow && endRow < (this.data.length + 1)) {
 
                 //Function to restore the Canavas... 
                 context.restore();
@@ -864,35 +885,67 @@ module.exports = class Grid {
         }
 
         //Logic to merge the column
-        this.mergeColumn = function (row, startColumn, endColumn) {
+        this.mergeColumn = function (Row, startColumn, endColumn) {
 
-            if (this.flag == 0 && row <= this.data.length + 1 && endColumn > startColumn && startColumn != endColumn) {
+            //to get the previous states...
+            let stateArray = JSON.parse(sessionStorage.getItem("previousColumnState"));
+            console.log("Previous Column State array: ", stateArray);
+
+            //to get the previous row State...
+            let rowStateArray = JSON.parse(sessionStorage.getItem("previousState"));
+            console.log("Previous Row State array: ", rowStateArray);
+
+            if (rowStateArray != null) {
+                for (let rowStateIndex = 0; rowStateIndex < rowStateArray.length; rowStateIndex++) {
+                    if (rowStateArray[rowStateIndex]["column"] == startColumn) {
+                        if ((Row - 1) == rowStateArray[rowStateIndex]["startRow"] || (Row - 1) == rowStateArray[rowStateIndex]["endRow"]) {
+                            return alert("Invalid Argument Passed!");
+                        }
+                    }
+                }
+            }
+
+            let stateFlag = 0;
+
+            if (stateArray != null) {
+                for (let stateIndex = 0; stateIndex < stateArray.length; stateIndex++) {
+                    if (stateArray[stateIndex]["row"] == Row) {
+                        if (startColumn >= stateArray[stateIndex]["startColumn"] && startColumn <= stateArray[stateIndex]["endColumn"]) {
+                            stateFlag = 2;
+                            alert("Invalid argument passed!")
+                            break;
+                        }
+                        else {
+                            if (endColumn >= stateArray[stateIndex]["startColumn"] && endColumn <= stateArray[stateIndex]["endColumn"]) {
+                                stateFlag = 2;
+                                alert("Invalid argument passed!")
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (stateFlag == 0) {
+                    stateFlag = 1;
+                }
+            }
+            else {
+                stateFlag = 1;
+            }
+
+
+            if (this.flag == 0 && stateFlag == 1 && Row <= this.data.length + 1 && endColumn > startColumn && startColumn != endColumn && (endColumn< Object.keys(this.data[0]).length)) {
+
+                //Function to restore the Canavas... 
+                context.restore();
+
                 //Function to draw table from JSON data...
                 this.drawBoard = function () {
 
                     console.log("Canvas Width: ", canvas.width);
                     console.log("Canvas Height: ", canvas.height);
 
-                    //To clear the canvas before drawing or redrawing the Table
-                    context.clearRect(0, 0, canvas.width, canvas.height);
-
-                    //Drawing rows outline on the table...
-                    for (var x = 0; x <= bw; x += 200) {
-                        context.moveTo(0.5 + x + p, p);
-                        context.lineTo(0.5 + x + p, bh + p);
-                    }
-
-                    //Drawing column outline on the table...
-                    for (var x = 0; x <= bh; x += 40) {
-                        context.moveTo(p, 0.5 + x + p);
-                        context.lineTo(bw + p, 0.5 + x + p);
-                    }
-
-                    //Setting properties for the border lines in the table drawn
-                    context.strokeStyle = "black";
-                    context.stroke();
-
-                    //logic for rowSpan
+                    //logic for columnSpan
                     for (let y2 = 0, count = 0; y2 <= bw; y2 += 200) {
                         var a, b, c, d;
 
@@ -902,7 +955,7 @@ module.exports = class Grid {
                         }
                         if (y2 == 0) {
                             a = (startColumn) * 200 + p;
-                            b = (row - 1) * 40 + 11;
+                            b = (Row - 1) * 40 + 11;
                             c = 2;
                             d = 39;
                         }
@@ -915,60 +968,52 @@ module.exports = class Grid {
 
                     let keys = Object.keys(this.data[0]); // finding keys in each JSON object
 
-                    // console.log("Total keys in each JSON object: ",keys);
-
                     //To Print the Header... 
-                    for (let x = 0, keyCount = 0; x < bw; x += 200) {
+                    for (let x = 0, Count = 1; x < bw; x += 200) {
                         context.font = "bold 16px Verdana";
                         context.fillStyle = 'black';
-                        if (row == 1) {
-                            if (keyCount + 1 >= startColumn && keyCount < endColumn) {
-                                context.clearRect((row - 1) * 40 + 11, (startColumn) * 200 + 11, (endColumn) * 199, 39);
+                        if (Row == 1) {
+                            if (Count >= startColumn && Count < endColumn) {
+                                context.clearRect((startColumn - 1) * 200 + 11, (Row - 1) * 40 + 11, 199 + (endColumn - startColumn) * 199, 39);
                                 context.fillText(keys[startColumn - 1], (startColumn * 200 + (Math.floor((endColumn - startColumn) / 2)) * 200) - 100, 40 - 5);
                             }
-                            else {
-                                context.fillText(keys[keyCount], 0.5 + x + p + 5, p + 25);
-                            }
                         }
-                        else {
-                            context.fillText(keys[keyCount], 0.5 + x + p + 5, p + 25);
-                        }
-                        ++keyCount;
-
+                        ++Count;
                     }
-
 
                     //To print the values of the Table Excluding Header...
                     for (let y = 80, count = 0; y <= bh; y += 40) {
-
                         for (let x = 0, keyCount = 0; x < bw; x += 200) {
                             context.font = "normal 16px Verdana";
                             context.fillStyle = 'black';
-                            if (count + 2 == row) {
+                            if (count + 2 == Row) {
                                 if (keyCount + 1 >= startColumn && keyCount < endColumn) {
-                                    context.clearRect((row - 1) * 40 + 11, (startColumn) * 200 + 11, (endColumn) * 199, 39);
-                                    context.fillText(this.data[row - 2][keys[startColumn - 1]], (startColumn * 200 + (Math.floor((endColumn - startColumn) / 2)) * 200) - 100, y - 5);
+                                    context.clearRect((startColumn - 1) * 200 + 11, (Row - 1) * 40 + 11, 199 + (endColumn - startColumn) * 199, 39);
+                                    context.fillText(this.data[Row - 2][keys[startColumn - 1]], (startColumn * 200 + (Math.floor((endColumn - startColumn) / 2)) * 200) - 100, y - 5);
                                 }
-                                else {
-                                    context.fillText((this.data[count])[keys[keyCount]], 0.5 + x + p + 5, y);
-                                }
-                            }
-                            else {
-                                context.fillText((this.data[count])[keys[keyCount]], 0.5 + x + p + 5, y);
                             }
                             ++keyCount;
                         }
                         ++count;
                     }
 
-
-
                     console.log("bh bw:", bh, bw)
                     //To clear extra rows and table in the column in canvas when table restructures.
                     context.clearRect(10, bh + 11, canvas.width, canvas.height)
                     context.clearRect(bw + 11, 9.5, canvas.width, canvas.height)
 
+                    //To Save the context
                     context.save();
+
+                    let state = {
+                        "row": Row,
+                        "startColumn": startColumn,
+                        "endColumn": endColumn
+                    }
+
+                    previousColumnStateArray.push(state);
+
+                    sessionStorage.setItem("previousColumnState", JSON.stringify(previousColumnStateArray));
 
                 }
                 this.drawBoard(); //Function call to draw the canvas on screen.
@@ -976,8 +1021,6 @@ module.exports = class Grid {
             }
 
         }
-
         return true;
     }
-
 };
