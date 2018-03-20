@@ -154,7 +154,7 @@ class Grid {
             }
         }
         else {
-            return "Sorry! you have already pivoted the Table. Please Rerender the Original table to Merge Rows."
+            return "Sorry! you have already pivoted the Table. Please Rerender the Original table to Merge Columns."
         }
 
 
