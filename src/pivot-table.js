@@ -17,6 +17,8 @@ class PivotTable {
 
         this.list = this.list.sort(); // Sorting the pivoting column field
 
+        // console.log("Unique elements in list: ", this.list);
+
         //Logic for Creating grid for pivoting Table:
 
         this.keys = Object.keys(data[0]); //Getting the keys of JSON object.
@@ -31,6 +33,7 @@ class PivotTable {
 
         this.primaryList = this.pivotingPrimaryField.filter((x, i, pivotingPrimaryField) => this.pivotingPrimaryField.indexOf(x) == i); //Array Containing Unique Elements of the Primary key Provided
 
+        // console.log("Unique elements in primary list: ", this.primaryList);
         // Logic for calculating the Border Height.
         this.bh = (this.primaryList.length + 2) * 40;
 
@@ -105,6 +108,7 @@ class PivotTable {
             if (headerKeys[i1] === this.passedValues[0]) headerKeys.splice(i1, 1);
         }
 
+
         for (var i1 = 1; i1 < this.passedValues.length - 1; i1++) {
             let index1 = headerKeys.indexOf(this.passedValues[i1]);
             headerKeys.splice(index1, 1);
@@ -113,6 +117,8 @@ class PivotTable {
         for (var i1 = 1; i1 < this.passedValues.length - 1; i1++) {
             headerKeys.push(this.passedValues[i1]);
         }
+
+        console.log("Header keys after removing Pivoting Column: ", headerKeys);
 
         //Logic to print the data into the table for the pivoting table...
         let pivotTableData = [];
@@ -127,18 +133,23 @@ class PivotTable {
 
             tempDataArray = tempDataArray.sort();
 
+            // console.log("TEMP. ARRAY DATA: ",tempDataArray);
+    
             let temparray = tempDataArray;
 
             for (let h3 = 0; h3 < temparray.length; h3++) {
                 let keyarr = [];
                 for (let h4 = 0; h4 < this.passedValues.length - 1; h4++) {
+                    console.log(temparray[h3][this.passedValues[h4]]);
                     keyarr.push(temparray[h3][this.passedValues[h4]]);
                     delete temparray[h3][this.passedValues[h4]];
                 }
 
+                console.log("keyarr: ",keyarr);
+
                 for (let h5 = 1; h5 < keyarr.length; h5++) {
                     for (let h4 = 1; h4 < this.passedValues.length - 1; h4++) {
-                        temparray[h3][this.passedValues[h4]] = keyarr[h5];
+                        temparray[h3][this.passedValues[h4]] = keyarr[h4];
                     }
                 }
             }
@@ -146,6 +157,8 @@ class PivotTable {
             pivotTableData.push(temparray);
 
         }
+
+        // console.log("temp aRRAY dATA: ",pivotTableData);
 
         //Logic to print the data to the Canvas...
 

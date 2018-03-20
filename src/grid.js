@@ -16,6 +16,9 @@ class Grid {
         //Initialising a flag to stpo the user from pivoting if rowa and columns are merged.
         this.mergeFlag = 0;
 
+        //Initializing data array
+        this.data = [];
+
         //Defining an array to save the state of Row
         this.previousStateArray = [];
 
@@ -84,7 +87,7 @@ class Grid {
             else {
 
                 //Instantiating object for Pivoting table
-                const pivot = new PivotTable(this.data, params);
+                let pivot = new PivotTable(this.data, params);
 
                 //calling renderPivotTable function from pivot object
                 pivot.renderPivotTable(this.context, this.canvas, this.data);
